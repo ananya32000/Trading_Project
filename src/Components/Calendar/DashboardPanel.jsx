@@ -81,7 +81,7 @@ let summaryData = null;
   const vixLike = typeof summaryData?.volatility === 'number' ? (summaryData.volatility * 1.5).toFixed(2) : 'N/A';
 
   const Section = ({ title, items }) => (
-    <div className="mb-4">
+    <div className="mb-4 max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg border border-black-200">
       <h4 className="text-md font-semibold text-blue-700 mb-1">{title}</h4>
       <ul className="list-disc list-inside text-gray-800 text-sm space-y-0.5">
         {items.map((item, idx) => (
@@ -100,7 +100,7 @@ let summaryData = null;
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 p-6 overflow-y-auto border-l border-gray-200"
+      className="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 p-6 overflow-y-auto border-l border-gray-400 rounded-tl-xl rounded-bl-xl"
     >
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold text-gray-800">

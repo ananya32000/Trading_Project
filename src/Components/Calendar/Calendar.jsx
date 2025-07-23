@@ -108,7 +108,7 @@ const Calendar = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg">
+      <div className="max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg border border-black-400">
         {/* Header */}
         <motion.h2
           className="text-center text-2xl font-bold mb-6"
@@ -229,7 +229,7 @@ const Calendar = () => {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 20, opacity: 0 }}
-      className="mt-4 p-4 rounded shadow text-sm"
+      className="mt-4 p-4 rounded shadow-lg text-sm border border-gray-200 bg-white"
       style={{
         backgroundColor:
           theme === 'highContrast' ? '#000' :
