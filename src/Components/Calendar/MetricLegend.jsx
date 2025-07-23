@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useTheme } from '../ThemeContext';
 
 const legends = {
@@ -31,14 +32,20 @@ const MetricLegend = ({ metric }) => {
   const { theme } = useTheme();
   const items = legends[metric] || [];
 
-  const containerClasses = theme === 'highContrast'
-    ? 'mt-4 bg-black text-yellow-300 border border-yellow-400 p-3 rounded shadow text-sm w-fit'
-    : 'mt-4 bg-white p-3 rounded shadow text-sm w-fit';
+  const containerClasses =
+    theme === 'highContrast'
+      ? 'mt-4 bg-black text-yellow-300 border border-yellow-400 p-4 rounded shadow-sm text-sm w-fit'
+      : 'mt-4 bg-white text-black border border-gray-300 p-4 rounded shadow-sm text-sm w-fit';
 
   const labelColor = theme === 'highContrast' ? 'text-yellow-300' : 'text-gray-700';
 
   return (
-    <div className={containerClasses}>
+    <motion.div
+      className={containerClasses}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className={`font-semibold mb-2 ${labelColor}`}>
         Legend: {metric.charAt(0).toUpperCase() + metric.slice(1)}
       </div>
@@ -50,7 +57,7 @@ const MetricLegend = ({ metric }) => {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

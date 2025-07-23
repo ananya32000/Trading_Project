@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import dayjs from 'dayjs';
 import { useTheme } from './ThemeContext';
+import { motion } from 'framer-motion';
 
 const SummaryChart = ({ data, metric }) => {
   const { theme } = useTheme();
@@ -24,24 +25,34 @@ const SummaryChart = ({ data, metric }) => {
   const titleColor =
     theme === 'highContrast' ? 'text-yellow-300' : 'text-gray-700';
 
-  const containerBg =
-    theme === 'highContrast'
-      ? 'bg-black border border-yellow-400'
-      : 'bg-white';
+  const containerClasses = `
+  rounded shadow-lg h-64 
+  ${theme === 'highContrast'
+    ? 'bg-black border-2 border-yellow-300'
+    : theme === 'colorblind'
+    ? 'bg-white border-2 border-orange-300'
+    : 'bg-white border-2 border-gray-400'}
+`;
 
   const lineColor =
     theme === 'highContrast'
-      ? '#FFD700' // gold/yellow
+      ? '#FFD700'
       : theme === 'colorblind'
-      ? '#1f78b4' // colorblind-friendly blue
-      : '#8884d8'; // default purple
+      ? '#1f78b4'
+      : '#8884d8';
 
   return (
-    <div className="mt-8">
+    <motion.div
+      className="mt-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <h3 className={`text-sm font-semibold mb-2 ${titleColor}`}>
         {metric.charAt(0).toUpperCase() + metric.slice(1)} Trend
       </h3>
-      <div className={`${containerBg} p-4 rounded shadow-md h-64`}>
+
+      <div className={containerClasses}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -89,7 +100,7 @@ const SummaryChart = ({ data, metric }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
