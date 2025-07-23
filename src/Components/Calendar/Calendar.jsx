@@ -108,7 +108,7 @@ const Calendar = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg border border-black-400">
+      <div className="max-w-6xl mx-auto p-6 rounded-2xl animated-gradient-border text-inherit">
         {/* Header */}
         <motion.h2
           className="text-center text-2xl font-bold mb-6"
@@ -119,29 +119,29 @@ const Calendar = () => {
         </motion.h2>
 
         {/* Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
           <div className="flex gap-2">
             <button
               onClick={() => setZoom((z) => Math.min(2, +(z + 0.1).toFixed(1)))}
-              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100", "p-2 bg-black text-yellow-300 rounded-full")}
+              className={themedButton(
+                "p-2 bg-white rounded-full shadow-md hover:bg-blue-100 transition duration-200 focus:ring-2 ring-blue-300",
+                "p-2 bg-black text-yellow-300 rounded-full hover:bg-gray-800 transition"
+              )}
             >
               <FaSearchPlus />
             </button>
             <button
               onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(1)))}
-              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100", "p-2 bg-black text-yellow-300 rounded-full")}
+              className={themedButton(
+                "p-2 bg-white rounded-full shadow-md hover:bg-blue-100 transition duration-200 focus:ring-2 ring-blue-300",
+                "p-2 bg-black text-yellow-300 rounded-full hover:bg-gray-800 transition"
+              )}
             >
               <FaSearchMinus />
             </button>
           </div>
 
-          <Select
-            options={instruments}
-            value={instrument}
-            onChange={setInstrument}
-            className="w-32"
-          />
-
+          <Select options={instruments} value={instrument} onChange={setInstrument} className="w-32" />
           <Select
             options={[
               { value: 'volatility', label: 'Volatility' },
@@ -153,7 +153,6 @@ const Calendar = () => {
             onChange={(option) => setSelectedMetric(option.value)}
             className="w-40"
           />
-
           <Select
             options={[
               { value: 'default', label: 'Default' },
@@ -164,33 +163,41 @@ const Calendar = () => {
             onChange={(option) => setTheme(option.value)}
             className="w-48"
           />
-
           <button
             onClick={() => exportToCSV(data)}
-            className={themedButton("px-3 py-2 bg-blue-600 text-white rounded", "px-3 py-2 bg-black text-yellow-300 rounded")}
+            className={themedButton(
+              "px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition",
+              "px-4 py-2 bg-black text-yellow-300 rounded shadow hover:bg-gray-800 transition"
+            )}
           >
             Export CSV
           </button>
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-center gap-2 mb-4">
-          <button onClick={() => setCurrentDate((d) => d.subtract(1, view))}>
+        <div className="flex justify-center gap-4 mb-4">
+          <button className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 shadow transition" onClick={() => setCurrentDate((d) => d.subtract(1, view))}>
             <FaChevronLeft />
           </button>
-          <button onClick={() => setCurrentDate(dayjs())}>Today</button>
-          <button onClick={() => setCurrentDate((d) => d.add(1, view))}>
+          <button className="px-4 py-1 bg-white rounded-full hover:bg-blue-50 shadow transition" onClick={() => setCurrentDate(dayjs())}>
+            Today
+          </button>
+          <button className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 shadow transition" onClick={() => setCurrentDate((d) => d.add(1, view))}>
             <FaChevronRight />
           </button>
         </div>
 
         {/* View Toggle */}
-        <div className="flex justify-center gap-2 mb-4">
+        <div className="flex justify-center gap-3 mb-4">
           {['month', 'week', 'day'].map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-3 py-1 rounded ${view === v ? 'bg-blue-600 text-white' : 'bg-white shadow'}`}
+              className={`px-4 py-2 rounded-full transition duration-200 shadow-md ${
+                view === v
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-white hover:bg-blue-50 text-gray-700'
+              }`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
@@ -220,32 +227,39 @@ const Calendar = () => {
         </motion.div>
 
         {/* Legends */}
-        <MetricLegend metric={selectedMetric} />
-        <AnomalyLegend />
+        <div className="mt-6 p-4 rounded-xl  bg-white shadow-xl border border-gray-300">
+          <MetricLegend metric={selectedMetric} />
+          <AnomalyLegend />
+        </div>
 
-       <AnimatePresence>
-  {summary && (
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 20, opacity: 0 }}
-      className="mt-4 p-4 rounded shadow-lg text-sm border border-gray-200 bg-white"
-      style={{
-        backgroundColor:
-          theme === 'highContrast' ? '#000' :
-          theme === 'colorblind' ? '#fef3c7' : '#fff',
-        color:
-          theme === 'highContrast' ? '#ff0' :
-          theme === 'colorblind' ? '#000' : '#000',
-      }}
-    >
-      <strong>Summary:</strong> Volatility: {(summary.volatility * 100).toFixed(2)}%, Performance: {(summary.performance * 100).toFixed(2)}%
-    </motion.div>
-  )}
-</AnimatePresence>
+        {/* Summary */}
+        <AnimatePresence>
+          {summary && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="mt-4 p-4 rounded-xl shadow-xl text-sm border border-gray-200 transition duration-200"
+              style={{
+                backgroundColor:
+                  theme === 'highContrast' ? '#000' :
+                  theme === 'colorblind' ? '#fef3c7' : '#fff',
+                color:
+                  theme === 'highContrast' ? '#ff0' :
+                  theme === 'colorblind' ? '#000' : '#000',
+              }}
+            >
+              <strong>Summary:</strong> Volatility: {(summary.volatility * 100).toFixed(2)}%, Performance: {(summary.performance * 100).toFixed(2)}%
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Chart */}
-        {summary && <SummaryChart data={data} metric={selectedMetric} />}
+        {summary && (
+          <div className="mt-4 p-4 rounded-xl bg-white shadow-md border border-gray-200">
+            <SummaryChart data={data} metric={selectedMetric} />
+          </div>
+        )}
 
         {/* Dashboard Panel */}
         <AnimatePresence>
