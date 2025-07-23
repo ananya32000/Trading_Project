@@ -50,7 +50,7 @@ const PerformanceArrow = ({ performance }) => {
   }
 };
 
-const CalendarCell = ({ day, onClick, isToday, isSelected, inRange, isAnomalous, data, metric }) => {
+const CalendarCell = ({ day, onClick, isToday, isSelected, inRange, isAnomalous, data, metric,zoom ,dateTextColor}) => {
   const metricValue = data?.[metric];
   const metricColorClass = getMetricColor(metric, metricValue);
 
@@ -65,37 +65,37 @@ const CalendarCell = ({ day, onClick, isToday, isSelected, inRange, isAnomalous,
         </div>
       )}
 
-      <div
-        role="gridcell"
-        tabIndex={0}
-        aria-selected={isSelected}
-        aria-label={`${day.format('ddd, MMM D')}${isToday ? ', today' : ''}`}
-        className={`relative cursor-pointer p-1 border rounded text-center select-none
-          ${metricColorClass}
-          ${isToday ? 'border-blue-500 bg-blue-100 font-bold' : ''}
-          ${isSelected ? 'bg-blue-300 text-white' : ''}
-          ${inRange ? 'bg-blue-200' : ''}
-        `}
-      >
-        {data && <LiquidityIndicator liquidity={data.liquidity} />}
-        {isAnomalous && (
-          <div className="absolute top-1 left-1 w-2 h-2 bg-red-500 rounded-full" title="Anomaly" />
-        )}
-        <div className="text-xs">{day.date()}</div>
-        {data && (
-          <div className="text-[10px] text-gray-600 flex items-center justify-center gap-1">
-            Vol: {Math.round(data.volume)}
-            <PerformanceArrow performance={data.performance} />
-          </div>
-        )}
-        {data && (
-          <div
-            className={`w-full h-1 rounded mt-1 ${
-              data.performance >= 0 ? 'bg-green-500' : 'bg-red-500'
-            }`}
-          ></div>
-        )}
+    <div
+  role="gridcell"
+  tabIndex={0}
+  aria-selected={isSelected}
+  aria-label={`${day.format('ddd, MMM D')}${isToday ? ', today' : ''}`}
+  className={`relative p-1 border rounded-lg text-center select-none transition-all duration-200 ease-in-out shadow-sm overflow-visible
+    ${metricColorClass}
+    ${isToday ? 'border-blue-500 bg-blue-100 font-bold' : ''}
+    ${isSelected ? 'bg-blue-300 text-white' : ''}
+    ${inRange ? 'bg-blue-200' : ''}`}
+>
+  <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center', transition: 'transform 0.2s' }}>
+    {data && <LiquidityIndicator liquidity={data.liquidity} />}
+    {isAnomalous && (
+      <div className="absolute top-1 left-1 w-2 h-2 bg-red-500 rounded-full" title="Anomaly" />
+    )}
+    <div className={`text-xs font-semibold ${dateTextColor}`}>{day.date()}</div>
+    {data && (
+      <div className="text-[10px] text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1">
+        Vol: {Math.round(data.volume)} <PerformanceArrow performance={data.performance} />
       </div>
+    )}
+    {data && (
+      <div
+        className={`w-full h-1 rounded mt-1 ${
+          data.performance >= 0 ? 'bg-green-500' : 'bg-red-500'
+        }`}
+      ></div>
+    )}
+  </div>
+</div>
     </div>
   );
 };

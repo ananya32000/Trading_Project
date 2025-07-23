@@ -4,15 +4,14 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { FaChevronLeft, FaChevronRight, FaSearchMinus, FaSearchPlus } from 'react-icons/fa';
 import CalendarCell from './CalendarCell';
 import DashboardPanel from './DashboardPanel';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Select from 'react-select';
 import { getRangeSummary } from './summaries';
 import { fetchBinanceDailyData } from '../../utils/fetchBinanceData';
 import MetricLegend from './MetricLegend';
 import SummaryChart from '../summaryChart';
 import { exportToCSV } from '../../utils/exporttoCSV';
-import { exportToPDF } from '../../utils/exportToPDF';
-import { exportCalendarAsImage } from '../../utils/exportToImage';
+import { showGlobalLoader, hideGlobalLoader } from '../../utils/exportToPDF';
 import { useTheme } from '../ThemeContext';
 import { detectAnomalies } from '../../utils/detectPatterns';
 import AnomalyLegend from '../AnomalyLegend';
@@ -38,8 +37,16 @@ const Calendar = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const fetchedData = await fetchBinanceDailyData(instrument.value);
-      setData(fetchedData);
+      try {
+        showGlobalLoader();
+        const symbol = instrument?.value || 'BTCUSDT';
+        const fetchedData = await fetchBinanceDailyData(symbol);
+        setData(fetchedData);
+      } catch (error) {
+        console.error('Error loading calendar data:', error);
+      } finally {
+        hideGlobalLoader();
+      }
     };
     loadData();
   }, [currentDate, instrument]);
@@ -49,8 +56,7 @@ const Calendar = () => {
       setRange([day, null]);
     } else {
       const [start] = range;
-      if (day.isBefore(start)) setRange([day, start]);
-      else setRange([start, day]);
+      setRange(day.isBefore(start) ? [day, start] : [start, day]);
     }
   };
 
@@ -59,9 +65,7 @@ const Calendar = () => {
     return a && b && day.isBetween(a, b, 'day', '[]');
   };
 
-  const isSelected = (day) => {
-    return range[0] && !range[1] && day.isSame(range[0], 'day');
-  };
+  const isSelected = (day) => range[0] && !range[1] && day.isSame(range[0], 'day');
 
   const handleKey = useCallback(
     (e) => {
@@ -86,13 +90,11 @@ const Calendar = () => {
     view === 'week' ? currentDate.endOf('week') : currentDate.endOf('month')
   );
 
-  const numCols = 7;
   const cellDays =
     view === 'month'
-      ? (() => {
-          const start = currentDate.startOf('month').startOf('week');
-          return Array.from({ length: 42 }, (_, i) => start.add(i, 'day'));
-        })()
+      ? Array.from({ length: 42 }, (_, i) =>
+          currentDate.startOf('month').startOf('week').add(i, 'day')
+        )
       : view === 'week'
       ? Array.from({ length: 7 }, (_, i) => currentDate.startOf('week').add(i, 'day'))
       : [currentDate];
@@ -100,43 +102,45 @@ const Calendar = () => {
   const themedButton = (base, hc) => (theme === 'highContrast' ? hc : base);
 
   return (
-    <div className={`theme-${theme}`}>
+    <motion.div
+      className={`theme-${theme}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg">
+        {/* Header */}
+        <motion.h2
+          className="text-center text-2xl font-bold mb-6"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          {dayjs().format('dddd, MMMM D, YYYY')}
+        </motion.h2>
 
-        {/* Calendar Title */}
-       <div
-  className={`mb-4 text-xl font-semibold text-center ${
-    theme === 'highContrast'
-      ? 'text-yellow-300'
-      : theme === 'colorblind'
-      ? 'text-orange-600'
-      : 'text-gray-800 dark:text-black'
-  }`}
->
-  {dayjs().format('dddd, MMMM D, YYYY')}
-</div>
-
-
-        {/* Control Bar */}
-        <div className="flex flex-wrap items-center justify-between mb-4 space-y-2">
-          <div className="flex space-x-2">
+        {/* Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex gap-2">
             <button
               onClick={() => setZoom((z) => Math.min(2, +(z + 0.1).toFixed(1)))}
-              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100 transition", "p-2 bg-black text-yellow-300 rounded-full shadow hover:bg-gray-800 transition")}
-              aria-label="Zoom In"
+              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100", "p-2 bg-black text-yellow-300 rounded-full")}
             >
               <FaSearchPlus />
             </button>
             <button
               onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(1)))}
-              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100 transition", "p-2 bg-black text-yellow-300 rounded-full shadow hover:bg-gray-800 transition")}
-              aria-label="Zoom Out"
+              className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100", "p-2 bg-black text-yellow-300 rounded-full")}
             >
               <FaSearchMinus />
             </button>
           </div>
 
-          <Select options={instruments} value={instrument} onChange={setInstrument} className="w-32" aria-label="Select Instrument" />
+          <Select
+            options={instruments}
+            value={instrument}
+            onChange={setInstrument}
+            className="w-32"
+          />
 
           <Select
             options={[
@@ -145,10 +149,9 @@ const Calendar = () => {
               { value: 'liquidity', label: 'Liquidity' },
               { value: 'rsi', label: 'RSI' },
             ]}
-            value={{ value: selectedMetric, label: selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1) }}
+            value={{ value: selectedMetric, label: selectedMetric }}
             onChange={(option) => setSelectedMetric(option.value)}
             className="w-40"
-            aria-label="Select Metric"
           />
 
           <Select
@@ -157,78 +160,105 @@ const Calendar = () => {
               { value: 'highContrast', label: 'High Contrast' },
               { value: 'colorblind', label: 'Colorblind-Friendly' },
             ]}
-            value={{ value: theme, label: theme.charAt(0).toUpperCase() + theme.slice(1) }}
+            value={{ value: theme, label: theme }}
             onChange={(option) => setTheme(option.value)}
             className="w-48"
-            aria-label="Select Theme"
           />
 
-          <button onClick={() => exportToCSV(data)} className={themedButton("px-3 py-2 bg-blue-600 text-white rounded hover:bg-green-700 transition", "px-3 py-2 bg-black text-yellow-300 rounded hover:bg-gray-800 transition")}>Export CSV</button>
-          <button onClick={() => exportToPDF('calendar-capture')} className={themedButton("px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition", "px-3 py-2 bg-black text-yellow-300 rounded hover:bg-gray-800 transition")}>Export PDF</button>
-          <button onClick={() => exportCalendarAsImage('calendar-capture')} className={themedButton("px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition", "px-3 py-2 bg-black text-yellow-300 rounded hover:bg-gray-800 transition")}>Export Image</button>
-
-          <div className="flex space-x-2">
-            <button onClick={() => setCurrentDate((d) => d.subtract(1, view))} className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100 transition", "p-2 bg-black text-yellow-300 rounded-full shadow hover:bg-gray-800 transition")}>
-              <FaChevronLeft />
-            </button>
-            <button onClick={() => setCurrentDate(dayjs())} className={themedButton("px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700", "px-3 py-2 rounded bg-black text-yellow-300 hover:bg-gray-800")}>
-              Today
-            </button>
-            <button onClick={() => setCurrentDate((d) => d.add(1, view))} className={themedButton("p-2 bg-white rounded-full shadow hover:bg-blue-100 transition", "p-2 bg-black text-yellow-300 rounded-full shadow hover:bg-gray-800 transition")}>
-              <FaChevronRight />
-            </button>
-          </div>
-
-          <div className="flex space-x-1">
-            <button onClick={() => setView('month')} className={`px-2 py-1 rounded ${view === 'month' ? themedButton('bg-blue-600 text-white', 'bg-yellow-400 text-black') : themedButton('bg-white shadow', 'bg-black text-yellow-300')}`}>Month</button>
-            <button onClick={() => setView('week')} className={`px-2 py-1 rounded ${view === 'week' ? themedButton('bg-blue-600 text-white', 'bg-yellow-400 text-black') : themedButton('bg-white shadow', 'bg-black text-yellow-300')}`}>Week</button>
-            <button onClick={() => setView('day')} className={`px-2 py-1 rounded ${view === 'day' ? themedButton('bg-blue-600 text-white', 'bg-yellow-400 text-black') : themedButton('bg-white shadow', 'bg-black text-yellow-300')}`}>Day</button>
-          </div>
+          <button
+            onClick={() => exportToCSV(data)}
+            className={themedButton("px-3 py-2 bg-blue-600 text-white rounded", "px-3 py-2 bg-black text-yellow-300 rounded")}
+          >
+            Export CSV
+          </button>
         </div>
 
-        <div id="calendar-capture">
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }} role="grid" aria-label={`${view} calendar view`}>
-            {cellDays.map((day, i) => (
-              <CalendarCell
-                key={i}
-                day={day}
-                onClick={() => onClickDay(day)}
-                isToday={day.isSame(dayjs(), 'day')}
-                isSelected={isSelected(day)}
-                inRange={inRange(day)}
-                data={data[day.format('YYYY-MM-DD')]}
-                isAnomalous={anomalies.has(day.format('YYYY-MM-DD'))}
-                metric={selectedMetric}
-                zoom={zoom}
-              />
-            ))}
-          </div>
+        {/* Navigation */}
+        <div className="flex justify-center gap-2 mb-4">
+          <button onClick={() => setCurrentDate((d) => d.subtract(1, view))}>
+            <FaChevronLeft />
+          </button>
+          <button onClick={() => setCurrentDate(dayjs())}>Today</button>
+          <button onClick={() => setCurrentDate((d) => d.add(1, view))}>
+            <FaChevronRight />
+          </button>
         </div>
 
+        {/* View Toggle */}
+        <div className="flex justify-center gap-2 mb-4">
+          {['month', 'week', 'day'].map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-3 py-1 rounded ${view === v ? 'bg-blue-600 text-white' : 'bg-white shadow'}`}
+            >
+              {v.charAt(0).toUpperCase() + v.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Calendar Grid */}
+        <motion.div
+          layout
+          className="grid gap-1"
+          style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', fontSize: `${zoom}rem` }}
+        >
+          {cellDays.map((day, i) => (
+            <CalendarCell
+              key={i}
+              day={day}
+              onClick={() => onClickDay(day)}
+              isToday={day.isSame(dayjs(), 'day')}
+              isSelected={isSelected(day)}
+              inRange={inRange(day)}
+              data={data[day.format('YYYY-MM-DD')]}
+              isAnomalous={anomalies.has(day.format('YYYY-MM-DD'))}
+              metric={selectedMetric}
+              zoom={zoom}
+            />
+          ))}
+        </motion.div>
+
+        {/* Legends */}
         <MetricLegend metric={selectedMetric} />
         <AnomalyLegend />
 
-        {summary && (
-          <div className="mt-4 p-4 bg-inherit text-inherit border rounded shadow font-mono text-sm">
-            <div>
-              <strong>Summary:</strong> Volatility: {(summary.volatility * 100).toFixed(2)}%, Performance: {(summary.performance * 100).toFixed(2)}%
-            </div>
-          </div>
-        )}
+       <AnimatePresence>
+  {summary && (
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 20, opacity: 0 }}
+      className="mt-4 p-4 rounded shadow text-sm"
+      style={{
+        backgroundColor:
+          theme === 'highContrast' ? '#000' :
+          theme === 'colorblind' ? '#fef3c7' : '#fff',
+        color:
+          theme === 'highContrast' ? '#ff0' :
+          theme === 'colorblind' ? '#000' : '#000',
+      }}
+    >
+      <strong>Summary:</strong> Volatility: {(summary.volatility * 100).toFixed(2)}%, Performance: {(summary.performance * 100).toFixed(2)}%
+    </motion.div>
+  )}
+</AnimatePresence>
+
+        {/* Chart */}
+        {summary && <SummaryChart data={data} metric={selectedMetric} />}
+
+        {/* Dashboard Panel */}
+        <AnimatePresence>
+          {range[0] && (
+            <DashboardPanel
+              range={range}
+              data={data}
+              onClose={() => setRange([null, null])}
+            />
+          )}
+        </AnimatePresence>
       </div>
-
-      {summary && <SummaryChart data={data} metric={selectedMetric} />}
-
-      <AnimatePresence>
-        {range[0] && (
-          <DashboardPanel
-            range={range}
-            data={data}
-            onClose={() => setRange([null, null])}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
