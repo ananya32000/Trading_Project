@@ -1,0 +1,13 @@
+@import "tailwindcss";
+/* Theme classes */
+.theme-default {
+  @apply bg-white text-black;
+}
+
+.theme-highContrast {
+  @apply bg-black text-white;
+}
+
+.theme-colorblind {
+  @apply bg-[#f5f5dc] text-black;
+}
