@@ -6,7 +6,7 @@ const getThemeColors = (theme) => {
   switch (theme) {
     case 'highContrast':
       return {
-        bg: 'bg-black/90 backdrop-blur-sm',
+        bg: 'bg-black/90 ',
         border: 'border-2 border-yellow-400',
         text: 'text-yellow-300',
         itemBorder: 'border-yellow-400',
@@ -14,7 +14,7 @@ const getThemeColors = (theme) => {
       };
     case 'colorblind':
       return {
-        bg: 'bg-amber-50/20 backdrop-blur-sm',
+        bg: 'bg-amber-50/20 ',
         border: 'border border-amber-300',
         text: 'text-amber-800',
         itemBorder: 'border-amber-400',
