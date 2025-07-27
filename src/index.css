@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* Theme classes */
 .theme-default {
-  @apply bg-white text-black;
+  @apply  text-black;
 }
 
 .theme-highContrast {
@@ -34,6 +34,6 @@
   position: relative;
   background-clip: padding-box;
   background-origin: border-box;
-  background-color: #fff;
+  
   transition: box-shadow 0.3s ease-in-out;
 }

@@ -1,17 +1,55 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaTimes } from 'react-icons/fa';
+import { useTheme } from '../ThemeContext';
 
 const DashboardPanel = ({ range, data, onClose }) => {
+  const { theme } = useTheme();
   const isSingle = range[0] && !range[1];
   const isRange = range[0] && range[1];
 
-const getRangeSummary = (data, startDate, endDate) => {
+  // Theme-based colors
+  const themeColors = {
+    default: {
+      bg: 'bg-white',
+      border: 'border-gray-200',
+      text: 'text-gray-800',
+      heading: 'text-blue-700',
+      accent: 'text-blue-600',
+      muted: 'text-gray-600',
+      panelBg: 'bg-white',
+      panelBorder: 'border-gray-300'
+    },
+    highContrast: {
+      bg: 'bg-black',
+      border: 'border-yellow-400',
+      text: 'text-yellow-300',
+      heading: 'text-yellow-400',
+      accent: 'text-yellow-300',
+      muted: 'text-yellow-400',
+      panelBg: 'bg-gray-900',
+      panelBorder: 'border-yellow-400'
+    },
+    colorblind: {
+      bg: 'bg-amber-50',
+      border: 'border-amber-300',
+      text: 'text-amber-900',
+      heading: 'text-blue-700',
+      accent: 'text-blue-600',
+      muted: 'text-amber-700',
+      panelBg: 'bg-amber-50',
+      panelBorder: 'border-amber-300'
+    }
+  };
+
+  const colors = themeColors[theme] || themeColors.default;
+
+  const getRangeSummary = (data, startDate, endDate) => {
     const start = startDate.clone();
     const end = endDate.clone();
     let count = 0;
 
-const summary = {
+    const summary = {
       open: null,
       close: null,
       high: -Infinity,
@@ -27,7 +65,7 @@ const summary = {
     let volSum = 0;
     let volSqSum = 0;
 
-for (let day = start.clone(); day.isSameOrBefore(end); day.add(1, 'day')) {
+    for (let day = start.clone(); day.isSameOrBefore(end); day.add(1, 'day')) {
       const dayStr = day.format('YYYY-MM-DD');
       const d = data[dayStr];
       if (!d) continue;
@@ -63,7 +101,7 @@ for (let day = start.clone(); day.isSameOrBefore(end); day.add(1, 'day')) {
     return summary;
   };
 
-let summaryData = null;
+  let summaryData = null;
   try {
     summaryData = isSingle
       ? data[range[0].format('YYYY-MM-DD')]
@@ -80,14 +118,25 @@ let summaryData = null;
   const rsi = 55; // Placeholder
   const vixLike = typeof summaryData?.volatility === 'number' ? (summaryData.volatility * 1.5).toFixed(2) : 'N/A';
 
+  const getPerformanceColor = (value) => {
+    if (typeof value !== 'number') return colors.text;
+    return value >= 0 
+      ? theme === 'highContrast' ? 'text-yellow-300' : 'text-green-600'
+      : theme === 'highContrast' ? 'text-yellow-400' : 'text-red-600';
+  };
+
   const Section = ({ title, items }) => (
-    <div className="mb-4 max-w-6xl mx-auto p-4 bg-inherit text-inherit rounded-xl shadow-lg border border-black-200">
-      <h4 className="text-md font-semibold text-blue-700 mb-1">{title}</h4>
-      <ul className="list-disc list-inside text-gray-800 text-sm space-y-0.5">
+    <div className={`mb-4 p-4 rounded-xl shadow-sm ${colors.panelBg} ${colors.panelBorder} border`}>
+      <h4 className={`text-md font-semibold ${colors.heading} mb-2 pb-1 border-b ${colors.border}`}>
+        {title}
+      </h4>
+      <ul className="space-y-2">
         {items.map((item, idx) => (
-          <li key={idx}>
-            <span className="font-medium text-gray-600">{item.label}:</span>{' '}
-            <span className="font-mono">{item.value}</span>
+          <li key={idx} className="flex justify-between">
+            <span className={`font-medium ${colors.muted}`}>{item.label}</span>
+            <span className={`font-mono ${item.isPerformance ? getPerformanceColor(item.value) : colors.text}`}>
+              {item.value}
+            </span>
           </li>
         ))}
       </ul>
@@ -100,17 +149,17 @@ let summaryData = null;
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 p-6 overflow-y-auto border-l border-gray-400 rounded-tl-xl rounded-bl-xl"
+      className={`fixed top-0 right-0 h-full w-96 shadow-2xl z-50 p-6 overflow-y-auto border-l ${colors.border} ${colors.bg}`}
     >
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-gray-800">
+        <h3 className={`text-xl font-bold ${colors.text}`}>
           {isSingle
             ? range[0].format('dddd, MMM D, YYYY')
             : `${range[0].format('MMM D')} - ${range[1].format('MMM D, YYYY')}`}
         </h3>
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-red-500 transition"
+          className={`${colors.text} hover:${theme === 'highContrast' ? 'text-yellow-400' : 'text-red-500'} transition`}
           aria-label="Close dashboard panel"
         >
           <FaTimes size={18} />
@@ -118,16 +167,16 @@ let summaryData = null;
       </div>
 
       {!summaryData ? (
-        <p className="text-gray-600">No data available for selected date</p>
+        <p className={colors.muted}>No data available for selected date</p>
       ) : (
         <div>
           <Section
             title="Prices"
             items={[
-              { label: 'Open', value: format(summaryData.open) },
-              { label: 'Close', value: format(summaryData.close) },
-              { label: 'High', value: format(summaryData.high) },
-              { label: 'Low', value: format(summaryData.low) },
+              { label: 'Open', value: `$${format(summaryData.open)}` },
+              { label: 'Close', value: `$${format(summaryData.close)}` },
+              { label: 'High', value: `$${format(summaryData.high)}` },
+              { label: 'Low', value: `$${format(summaryData.low)}` },
             ]}
           />
           <Section
@@ -148,8 +197,8 @@ let summaryData = null;
           <Section
             title="Performance"
             items={[
-              { label: 'Performance', value: formatPercent(summaryData.performance) },
-              { label: 'Benchmark', value: formatPercent(summaryData.benchmarkPerf) },
+              { label: 'Performance', value: formatPercent(summaryData.performance), isPerformance: true },
+              { label: 'Benchmark', value: formatPercent(summaryData.benchmarkPerf), isPerformance: true },
               {
                 label: 'Difference',
                 value:
@@ -157,13 +206,14 @@ let summaryData = null;
                   typeof summaryData.benchmarkPerf === 'number'
                     ? ((summaryData.performance - summaryData.benchmarkPerf) * 100).toFixed(2) + '%'
                     : 'N/A',
+                isPerformance: true
               },
             ]}
           />
           <Section
             title="Technical Indicators"
             items={[
-              { label: 'Moving Average', value: movingAverage },
+              { label: 'Moving Average', value: `$${movingAverage}` },
               { label: 'RSI', value: rsi },
             ]}
           />

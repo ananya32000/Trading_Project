@@ -17,7 +17,7 @@ const AnomalyLegend = () => {
   return (
     <div className="flex items-center space-x-2 mt-2">
       <div className={`w-3 h-3 rounded-full ${dotStyle}`} />
-      <span className={`text-sm ${textStyle}`}>Red dot = Anomaly detected</span>
+      <span className={`text-sm text-white ${textStyle}`}>Red dot = Anomaly detected</span>
     </div>
   );
 };
