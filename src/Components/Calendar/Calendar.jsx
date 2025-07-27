@@ -460,7 +460,7 @@ const Calendar = () => {
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 20, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className={`mt-6 p-4 rounded-xl backdrop-blur-sm ${
+      className={`mt-6 p-4 rounded-xl  ${
         theme === 'highContrast' 
           ? 'bg-black/90 border-2 border-yellow-400 text-yellow-300' 
           : theme === 'colorblind' 

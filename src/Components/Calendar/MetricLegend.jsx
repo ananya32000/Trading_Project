@@ -22,7 +22,7 @@ const getThemeColors = (theme) => {
       };
     default:
       return {
-        bg: 'bg-black/10 backdrop-blur-sm',
+        bg: 'bg-black/10 ',
         border: 'border border-white/30',
         text: 'text-white',
         itemBorder: 'border-white/40',
