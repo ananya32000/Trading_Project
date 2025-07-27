@@ -1,5 +1,6 @@
 import React from 'react';
 import TooltipContent from './TooltipContent';
+import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 
 const getMetricColor = (metric, value, theme) => {
@@ -120,9 +121,29 @@ const CalendarCell = ({
     return theme === 'highContrast' ? 'text-yellow-300' : 'text-gray-700';
   };
 
+  // Enhanced gradient border styles with thicker borders in default theme
+  const getBorderStyle = () => {
+    const baseStyle = 'rounded-xl';
+    const borderWidth = theme === 'highContrast' ? 'p-[2px]' : 'p-[2px]'; // Thicker border in default theme
+    
+    if (isSelected) {
+      return theme === 'highContrast' 
+        ? `bg-gradient-to-br from-purple-500 via-pink-500 to-purple-700 ${baseStyle} ${borderWidth}`
+        : `bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 ${baseStyle} ${borderWidth}`;
+    }
+    if (isToday) {
+      return theme === 'highContrast'
+        ? `bg-gradient-to-br from-purple-600 to-pink-600 ${baseStyle} ${borderWidth}`
+        : `bg-gradient-to-br from-purple-400 to-pink-500 ${baseStyle} ${borderWidth}`;
+    }
+    return theme === 'highContrast'
+      ? `bg-gradient-to-br from-purple-800 to-purple-900 ${baseStyle} ${borderWidth}`
+      : `bg-gradient-to-br from-purple-300 to-pink-400 ${baseStyle} ${borderWidth}`;
+  };
+
   return (
     <div className="relative group" onClick={onClick}>
-      {/* Enhanced Tooltip */}
+      {/* Tooltip remains unchanged */}
       {data && (
         <div
           className={`absolute z-30 hidden group-hover:block rounded-lg p-3 text-xs w-64 pointer-events-none opacity-0 group-hover:opacity-100 transform group-hover:translate-y-1 transition-all duration-200 ${
@@ -136,93 +157,88 @@ const CalendarCell = ({
         </div>
       )}
 
-      {/* Main Cell */}
-      <div
-        role="gridcell"
-        tabIndex={0}
-        aria-selected={isSelected}
-        aria-label={`${day.format('ddd, MMM D')}${isToday ? ', today' : ''}`}
-        className={`relative p-1 border rounded-xl text-center select-none overflow-visible
-          transition-all duration-200 ease-in-out transform
-          ${metricColorClass}
-          ${isToday ? 
-            theme === 'highContrast' 
-              ? 'border-yellow-400 bg-yellow-900 font-bold shadow-inner' 
-              : 'border-blue-500 bg-blue-100 font-bold shadow-inner' 
-            : ''}
-          ${isSelected ? 
-            theme === 'highContrast'
-              ? 'bg-yellow-500 text-black shadow-xl ring-2 ring-yellow-300'
-              : 'bg-blue-500 text-white shadow-xl ring-2 ring-blue-300'
-            : ''}
-          ${inRange ? 
-            theme === 'highContrast' 
-              ? 'bg-yellow-900/50' 
-              : 'bg-blue-200/70'
-            : ''}
-          hover:scale-[1.03] hover:shadow-lg hover:z-10 ${
-            theme === 'highContrast'
-              ? 'hover:ring-2 hover:ring-yellow-400'
-              : 'hover:ring-2 hover:ring-blue-200'
-          }
-          focus:outline-none ${
-            theme === 'highContrast'
-              ? 'focus:ring-2 focus:ring-yellow-400'
-              : 'focus:ring-2 focus:ring-blue-400'
-          } cursor-pointer
-        `}
-      >
+      {/* Gradient Border Wrapper - now with thicker borders in default theme */}
+      <div className={getBorderStyle()}>
         <div
-          style={{
-            transform: `scale(${zoom})`,
-            transformOrigin: 'center',
-            transition: 'transform 0.2s ease',
-          }}
-          className="space-y-1"
-        >
-          {data && <LiquidityIndicator liquidity={data.liquidity} theme={theme} />}
-          
-          {isAnomalous && (
-            <div
-              className={`absolute top-1 left-1 w-2.5 h-2.5 rounded-full shadow-md ring-2 ${
-                theme === 'highContrast'
-                  ? 'bg-red-500 ring-yellow-400'
-                  : 'bg-red-500 ring-red-300'
-              } animate-pulse`}
-              title="Anomaly"
-            />
-          )}
-
-          <div className={`text-xs font-semibold ${getDateTextColor()}`}>
-            {day.date()}
-          </div>
-
-          {data && (
-            <div className={`text-[10px] ${
+          role="gridcell"
+          tabIndex={0}
+          aria-selected={isSelected}
+          aria-label={`${day.format('ddd, MMM D')}${isToday ? ', today' : ''}`}
+          className={`relative p-1 rounded-lg text-center select-none overflow-visible
+            transition-all duration-200 ease-in-out transform
+            ${metricColorClass}
+            ${isToday ? 
               theme === 'highContrast' 
-                ? 'text-yellow-300' 
-                : isSelected 
-                  ? 'text-white/90' 
-                  : 'text-gray-700'
-            } flex items-center justify-center gap-1 leading-tight`}>
-              Vol: {Math.round(data.volume)}
-              <PerformanceArrow performance={data.performance} theme={theme} />
-            </div>
-          )}
+                ? 'bg-yellow-900 font-bold shadow-inner' 
+                : 'bg-blue-100 font-bold shadow-inner' 
+              : ''}
+            ${isSelected ? 
+              theme === 'highContrast'
+                ? 'bg-yellow-500 text-black shadow-xl'
+                : 'bg-blue-500 text-white shadow-xl'
+              : ''}
+            ${inRange ? 
+              theme === 'highContrast' 
+                ? 'bg-yellow-900/50' 
+                : 'bg-blue-200/70'
+              : ''}
+            hover:scale-[1.03] hover:shadow-lg hover:z-10
+            focus:outline-none cursor-pointer
+          `}
+        >
+          {/* Rest of the cell content remains unchanged */}
+          <div
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: 'center',
+              transition: 'transform 0.2s ease',
+            }}
+            className="space-y-1"
+          >
+            {data && <LiquidityIndicator liquidity={data.liquidity} theme={theme} />}
+            
+            {isAnomalous && (
+              <div
+                className={`absolute top-1 left-1 w-2.5 h-2.5 rounded-full shadow-md ring-2 ${
+                  theme === 'highContrast'
+                    ? 'bg-red-500 ring-yellow-400'
+                    : 'bg-red-500 ring-red-300'
+                } animate-pulse`}
+                title="Anomaly"
+              />
+            )}
 
-          {data && (
-            <div
-              className={`w-full h-1.5 rounded-full mt-1 transition-all duration-300 shadow-sm ${
-                data.performance >= 0
-                  ? theme === 'highContrast'
-                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
-                    : 'bg-gradient-to-r from-green-400 to-green-600'
-                  : theme === 'highContrast'
-                    ? 'bg-gradient-to-r from-red-500 to-red-700'
-                    : 'bg-gradient-to-r from-red-400 to-red-600'
-              }`}
-            />
-          )}
+            <div className={`text-xs font-semibold ${getDateTextColor()}`}>
+              {day.date()}
+            </div>
+
+            {data && (
+              <div className={`text-[10px] ${
+                theme === 'highContrast' 
+                  ? 'text-yellow-300' 
+                  : isSelected 
+                    ? 'text-white/90' 
+                    : 'text-gray-700'
+              } flex items-center justify-center gap-1 leading-tight`}>
+                Vol: {Math.round(data.volume)}
+                <PerformanceArrow performance={data.performance} theme={theme} />
+              </div>
+            )}
+
+            {data && (
+              <div
+                className={`w-full h-1.5 rounded-full mt-1 transition-all duration-300 shadow-sm ${
+                  data.performance >= 0
+                    ? theme === 'highContrast'
+                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
+                      : 'bg-gradient-to-r from-green-400 to-green-600'
+                    : theme === 'highContrast'
+                      ? 'bg-gradient-to-r from-red-500 to-red-700'
+                      : 'bg-gradient-to-r from-red-400 to-red-600'
+                }`}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
