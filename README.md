@@ -1,4 +1,4 @@
-# 📊 Trading Project
+# 📊 Market Seasonality Explorer
 
 A modern, responsive web-based trading dashboard built with **React**, **Vite**, and **Tailwind CSS**. The application provides dynamic visualizations and UI components for order books, trading summaries, and user-friendly data interaction.
 
